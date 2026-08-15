@@ -5,9 +5,9 @@
 做数值断言，确认可独立复现论文结果。
 
 用法:
-    python reprodection.py            # k=1
-    python reprodection.py --k 3      # 前 3 个 seed
-    python reprodection.py --tol 1e-6  # 自定义容差
+    python reproduction.py            # k=1
+    python reproduction.py --k 3      # 前 3 个 seed
+    python reproduction.py --tol 1e-6  # 自定义容差
 
 说明:
     - 显式关闭 warm-up 窗口（steady_state.enabled=false，与 freeze 一致）。
