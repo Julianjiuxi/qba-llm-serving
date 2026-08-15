@@ -1,0 +1,57 @@
+{
+  "config_snapshot": {
+    "admission_number": 5000,
+    "seed": 42,
+    "budget_tokens": 128,
+    "request_block_size": 8,
+    "KV_total_capacity": 8192,
+    "KV_safety_threshold": 0.7,
+    "gamma": 0.8,
+    "quota_k": 5,
+    "ageing_measure": "history",
+    "label_threshold_percentail": 0.85,
+    "lambda_arrival": 32.0,
+    "token_scale": 0.44,
+    "steady_state": {
+      "enabled": false,
+      "trim_ratio": 0.1
+    }
+  },
+  "n_windows": 100,
+  "n_total_requests": 500000,
+  "pre_stat_names": [
+    "n_requests",
+    "raw_lambda",
+    "time_scale",
+    "trace_span_s",
+    "scaled_E_P",
+    "scaled_E_D",
+    "scaled_E_PD",
+    "p85_answer_threshold",
+    "true_long_fraction",
+    "inter_arrival_Ca2"
+  ],
+  "post_metric_names": [
+    "waiting_mean",
+    "waiting_p95",
+    "waiting_p99",
+    "max_waiting",
+    "ts_mean",
+    "ts_p99",
+    "tl_mean",
+    "tl_p99",
+    "n_true_short",
+    "n_true_long",
+    "actual_epsilon_SL",
+    "actual_epsilon_LS",
+    "e2e_mean",
+    "e2e_p99",
+    "ttft_mean",
+    "ttft_p99",
+    "throughput",
+    "oom_prob",
+    "avg_batch_utilization",
+    "qba_promoted_total",
+    "elapsed_seconds"
+  ]
+}

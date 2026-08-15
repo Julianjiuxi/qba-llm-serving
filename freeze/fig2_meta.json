@@ -1,0 +1,150 @@
+{
+  "cfg_formula_snapshot": {
+    "admission_number": 5000,
+    "seed": 42,
+    "budget_tokens": 128,
+    "request_block_size": 8,
+    "KV_total_capacity": 8192,
+    "KV_safety_threshold": 0.7,
+    "gamma": 0.8,
+    "quota_k": 5,
+    "ageing_measure": "history",
+    "label_threshold_percentail": 0.85,
+    "TN": 0.0,
+    "TP": 0.0,
+    "FN": 0.0,
+    "FP": 0.0,
+    "BT_BASE_C": 0.003,
+    "BT_SLOPE_A": 2e-05,
+    "BT_KNEE_B0": 64
+  },
+  "cfg_sim_snapshot": {
+    "admission_number": 5000,
+    "seed": 42,
+    "budget_tokens": 128,
+    "request_block_size": 8,
+    "KV_total_capacity": 8192,
+    "KV_safety_threshold": 0.7,
+    "gamma": 0.8,
+    "quota_k": 5,
+    "ageing_measure": "history",
+    "label_threshold_percentail": 0.85,
+    "TN": 0.0,
+    "TP": 0.0,
+    "FN": 0.0,
+    "FP": 0.0,
+    "BT_BASE_C": 0.003,
+    "BT_SLOPE_A": 2e-05,
+    "BT_KNEE_B0": 64
+  },
+  "args": {
+    "sim_lambda_min": 26.0,
+    "sim_lambda_max": 40.0,
+    "sim_lambda_step": 1.0,
+    "formula_lambda_min": 27.0,
+    "formula_lambda_max": 32.0,
+    "formula_lambda_step": 0.25,
+    "plot_dir": "/root/plot",
+    "out_prefix": "fig2",
+    "reference_load": null,
+    "phi_fit_lambdas": "25,27,29,31,33",
+    "sim_admission_number": null,
+    "seed_start": 42,
+    "seed_count": 100
+  },
+  "phi_aux": {
+    "psfa": {
+      "phi_knots_n": 5,
+      "phi_debug": [
+        [
+          25.0,
+          0.7574400999996679,
+          0.3413333333333333,
+          256,
+          750
+        ],
+        [
+          27.0,
+          0.8180353079996412,
+          0.4533333333333333,
+          340,
+          750
+        ],
+        [
+          29.0,
+          0.8786305159996146,
+          0.484,
+          363,
+          750
+        ],
+        [
+          31.0,
+          0.9392257239995879,
+          0.684,
+          513,
+          750
+        ],
+        [
+          33.0,
+          0.9998209319995616,
+          0.94,
+          705,
+          750
+        ]
+      ]
+    },
+    "psfaq": {
+      "phi_knots_n": 5,
+      "phi_debug": [
+        [
+          25.0,
+          0.7574400999996679,
+          0.3,
+          225,
+          750
+        ],
+        [
+          27.0,
+          0.8180353079996412,
+          0.396,
+          297,
+          750
+        ],
+        [
+          29.0,
+          0.8786305159996146,
+          0.44533333333333336,
+          334,
+          750
+        ],
+        [
+          31.0,
+          0.9392257239995879,
+          0.7026666666666667,
+          527,
+          750
+        ],
+        [
+          33.0,
+          0.9998209319995616,
+          0.8693333333333333,
+          652,
+          750
+        ]
+      ]
+    }
+  },
+  "aux": {
+    "reference_load": 30.0,
+    "reference_mean_wait_sim": 1.2729955275935367,
+    "reference_mean_wait_formula": 0.15188932575736747,
+    "reference_mean_service": 0.3332736439998537,
+    "mean_concurrency": 8.793092515482657,
+    "p90_concurrency": 13.0,
+    "max_concurrency": 16.0,
+    "n_budget": 16,
+    "n_finished": 5000,
+    "es": 0.3332736439998538,
+    "es2": 0.1487992011743074
+  }
+}
