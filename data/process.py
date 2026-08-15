@@ -231,7 +231,7 @@ def normalize_time() -> list[Path]:
     print(f"Normalizing {len(paths)} subsets (independent per-subset origin) …")
     for i, p in enumerate(paths):
         df = pd.read_csv(p)
-        ts = pd.to_datetime(df["TIMESTAMP"])
+        ts = pd.to_datetime(df["TIMESTAMP"], format="mixed", utc=True)
         origin = ts.iloc[0]
         df.drop(columns=["TimeSeconds"], inplace=True, errors="ignore")
         df.insert(0, "TimeSeconds", (ts - origin).dt.total_seconds())

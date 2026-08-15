@@ -1,5 +1,6 @@
+# IPCCC paper single-run default config (Section IV-A setup).
 admission_number: 5000
-lambda_arrival: 25
+lambda_arrival: 32
 
 norm_ratio: 0.7
 norm_loc: 100
@@ -28,14 +29,14 @@ BT_JITTER_STD: 0.0
 BT_MIN: 0.0001
 
 KV_total_capacity: 8192
-KV_safety_threshold: 0.85
+KV_safety_threshold: 0.7
 
 budget_tokens: 128
 request_block_size: 8
 
 seed: 42
 
-schedule_method: RR
+schedule_method: QBA
 gamma: 0.80
 quota_k: 5
 ageing_measure: history

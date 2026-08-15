@@ -61,16 +61,13 @@ LLM_in_Queuing/
 
 ```bash
 cd qba-llm-serving
-pip install -e .
+pip install -e .            # core deps: numpy, pyyaml, pandas, matplotlib
 ```
 
-Core runtime dependencies are `numpy` and `pyyaml` (declared in
-`pyproject.toml`). The real-trace pipeline additionally needs `pandas`
-(`data/process.py`, `scripts/real_trace_analysis.py`), and
-`scripts/run_experiment.py` needs `matplotlib`. Install them on demand:
+The `dev` extra additionally installs `pytest` for the test suite:
 
 ```bash
-pip install pandas matplotlib
+pip install -e ".[dev]"
 ```
 
 ## Quick start (single simulation)
@@ -281,7 +278,7 @@ python data/process.py token-scale   # compute global token scale s_tok
 Per-figure base configs live in `scripts/experiment/configs/`
 (`sweep_lambda_base.yaml`, `sweep_quotak_base.yaml`, `sweep_gamma_base.yaml`,
 `sweep_epsilonSL_base.yaml`, `sweep_epsilonLS_base.yaml`). Example top-level
-configs are in `configs/` (`conference_default.yaml`, `journal_base.yaml`,
+configs are in `configs/` (`conference_default.yaml`,
 `ipccc_base.yaml`, and per-policy `*_base.yaml`).
 
 Representative keys:
@@ -321,6 +318,7 @@ it disabled.
 ## Tests
 
 ```bash
+pip install -e ".[dev]"
 pytest tests/ -v
 ```
 

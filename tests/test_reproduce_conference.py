@@ -220,7 +220,7 @@ def test_types_smoke() -> None:
 
 
 def test_workload_matches_refine() -> None:
-    import refine as rf
+    rf = pytest.importorskip("refine")
     from llm_in_queuing.workload import generate_heapq
 
     repo_root = Path(__file__).resolve().parents[1]

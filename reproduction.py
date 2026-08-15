@@ -152,8 +152,56 @@ def _check_fig4(tol: float, k: int) -> None:
     print("[fig4] OK")
 
 
+def _check_fig5(tol: float, k: int) -> None:
+    data = np.load(os.path.join(FREEZE_DIR, "fig5_data.npz"))
+    cfg = _close_warmup(load_config(os.path.join(CONFIG_DIR, "sweep_epsilonSL_base.yaml")))
+    lam = float(data["reference_lambda"][0])
+    epsilons_sl = data["epsilons_sl"]
+    eps_ls_fixed = float(data["epsilon_ls_fixed"][0])
+    seeds = [int(x) for x in data["seeds"][:k]]
+    print(f"[fig5] seeds={seeds} epsilons_sl={epsilons_sl.tolist()} lambda={lam}")
+    rows = sweep_epsilonSL._run_epsilon_sweep(
+        cfg, lam, epsilons_sl, eps_ls_fixed, FIG56_POLICIES, seeds)
+    for p in FIG56_POLICIES:
+        nkey = FIG56_NPZ[p]
+        for mk in FIG56_METRICS:
+            _assert_close(
+                rows[p][f"{mk}_runs"], data[f"{nkey}_{mk}_runs"][:k],
+                f"fig5 {p} {mk}", tol)
+    refs = run_references(cfg, lam, ["FCFS"], seeds, extended=True)
+    for mk in FIG56_METRICS:
+        _assert_close(
+            refs["FCFS"][f"{mk}_runs"], data[f"ref_fcfs_{mk}_runs"][:k],
+            f"fig5 ref FCFS {mk}", tol)
+    print("[fig5] OK")
+
+
+def _check_fig6(tol: float, k: int) -> None:
+    data = np.load(os.path.join(FREEZE_DIR, "fig6_data.npz"))
+    cfg = _close_warmup(load_config(os.path.join(CONFIG_DIR, "sweep_epsilonLS_base.yaml")))
+    lam = float(data["reference_lambda"][0])
+    epsilons_ls = data["epsilons_ls"]
+    eps_sl_fixed = float(data["epsilon_sl_fixed"][0])
+    seeds = [int(x) for x in data["seeds"][:k]]
+    print(f"[fig6] seeds={seeds} epsilons_ls={epsilons_ls.tolist()} lambda={lam}")
+    rows = sweep_epsilonLS._run_epsilon_sweep(
+        cfg, lam, epsilons_ls, eps_sl_fixed, FIG56_POLICIES, seeds)
+    for p in FIG56_POLICIES:
+        nkey = FIG56_NPZ[p]
+        for mk in FIG56_METRICS:
+            _assert_close(
+                rows[p][f"{mk}_runs"], data[f"{nkey}_{mk}_runs"][:k],
+                f"fig6 {p} {mk}", tol)
+    refs = run_references(cfg, lam, ["FCFS"], seeds, extended=True)
+    for mk in FIG56_METRICS:
+        _assert_close(
+            refs["FCFS"][f"{mk}_runs"], data[f"ref_fcfs_{mk}_runs"][:k],
+            f"fig6 ref FCFS {mk}", tol)
+    print("[fig6] OK")
+
+
 def main() -> None:
-    parser = argparse.ArgumentParser(description="论文 fig2/3/4 可复现性回归测试")
+    parser = argparse.ArgumentParser(description="论文 fig2/3/4/5/6 可复现性回归测试")
     parser.add_argument("--k", type=int, default=1, help="抽取并校验的 seed 数量")
     parser.add_argument("--tol", type=float, default=1e-8, help="数值比较容差（rtol=atol）")
     args = parser.parse_args()
