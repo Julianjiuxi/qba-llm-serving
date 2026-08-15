@@ -1,4 +1,4 @@
-# LLM in Queuing
+# Quota-Based Aging for Prediction-Guided Scheduling in LLM Serving
 
 A queueing-model and token-level simulator for **LLM serving** with **continuous
 batching** (prefill + decode) under a **KV-cache capacity constraint**. The
@@ -60,7 +60,7 @@ LLM_in_Queuing/
 ## Installation
 
 ```bash
-cd LLM_in_Queuing
+cd qba-llm-serving
 pip install -e .
 ```
 
