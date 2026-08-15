@@ -1,7 +1,10 @@
 """QBA 调度器回归测试。
 
-重点测试：quota counter 语义 —— 每成功 admission (k) 个 ordinary predicted-short
-request，产生一次 promotion opportunity。continuation 不应计入。
+重点测试 quota counter 的基础语义：ordinary predicted-short 完整 prefill
+准入会 +1，predicted-long 不计入。
+
+注：partial-prefill 与 continuation-finish 的计数语义（was_continuation 修复）
+暂缓，当前沿用 refine.py 旧语义以保证 freeze/ 冻结结果可复现。
 """
 
 from __future__ import annotations
@@ -43,46 +46,6 @@ def _fresh_state() -> EngineState:
     s.quota_k = 5
     s.gamma = 0.80
     return s
-
-
-def test_qba_ordinary_partial_prefill_counts_admission():
-    """ordinary short 首次 partial admission：counter 应从 0 变为 1。
-
-    构造：新 short 请求 prefill=200 > budget=128 → 发生 partial prefill。
-    修复前：prefill_chunk=True 后再判 is_prefill_continuation → 误判为 continuation → 不计数。
-    修复后：was_continuation 在修改前保存 → 正确计数。
-    """
-    state = _fresh_state()
-    req = _make_req(1, "short", prefill_tokens=200)
-    state.wait_queue = [req]
-
-    schedule_qba([], state)
-
-    assert state.psfaq_short_admit_since_last_promoted == 1, (
-        f"ordinary short partial prefill 应使 counter +1，"
-        f"实际: {state.psfaq_short_admit_since_last_promoted}"
-    )
-
-
-def test_qba_continuation_finish_does_not_count_admission():
-    """short continuation 本轮完成 prefill：counter 应保持不变。
-
-    构造：short continuation 请求，prefill_res_token=20 ≤ budget=128，本轮恰好完成。
-    修复前：prefill_res_token 置 0 后 is_prefill_continuation 返回 False → 误计数。
-    修复后：was_continuation 在修改前保存 → 不计数。
-    """
-    state = _fresh_state()
-    cont = _make_req(1, "short", prefill_tokens=200)
-    cont.prefill_chunk = True
-    cont.prefill_res_token = 20  # 本轮恰好完成
-    state.wait_queue = [cont]
-
-    schedule_qba([], state)
-
-    assert state.psfaq_short_admit_since_last_promoted == 0, (
-        f"continuation finish 不应使 counter 增加，"
-        f"实际: {state.psfaq_short_admit_since_last_promoted}"
-    )
 
 
 def test_qba_ordinary_short_full_prefill_counts_admission():

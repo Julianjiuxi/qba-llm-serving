@@ -53,7 +53,7 @@ LLM_in_Queuing/
 ├── configs/                   # example top-level configs (conference/journal/…)
 ├── freeze/                    # frozen artifacts (fig2–fig6 + real-trace results)
 ├── tests/                     # pytest suite
-├── reproduction.py            # reproducibility regression check (fig2/3/4)
+├── reproduction.py            # reproducibility regression check (fig2–fig6)
 └── pyproject.toml
 ```
 
@@ -97,15 +97,21 @@ SIM-layer sweeps and asserts bit-level closeness (default tolerance `1e-8`)
 against the corresponding `freeze/` segments:
 
 ```bash
+# pinned numerical environment (see freeze/*_meta.json: Python 3.10.11, NumPy 1.26.4)
+pip install -r requirements-repro.txt
+pip install -e . --no-deps
+python reproduction.py --k 1
+```
+
+```bash
 python reproduction.py            # k=1
 python reproduction.py --k 3      # first 3 seeds
 python reproduction.py --tol 1e-6 # custom tolerance
 ```
 
-It covers the seed-indexed `*_runs` arrays of `fig2`, `fig3`, and `fig4`
-(formula-layer curves are deterministic and therefore not included). Warm-up /
-steady-state trimming is explicitly disabled to match how `freeze/` was
-generated.
+It covers the seed-indexed `*_runs` arrays of `fig2`–`fig6` (formula-layer
+curves are deterministic and therefore not included). Warm-up / steady-state
+trimming is explicitly disabled to match how `freeze/` was generated.
 
 ## Figure experiments (fig2–fig6)
 

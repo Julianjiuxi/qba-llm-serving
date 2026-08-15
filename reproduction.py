@@ -1,6 +1,6 @@
 """面向论文可复现性的回归测试。
 
-用重构后的 LLM_in_Queuing 引擎重跑 fig2/fig3/fig4 的 SIM 层实验，
+用重构后的 LLM_in_Queuing 引擎重跑 fig2/fig3/fig4/fig5/fig6 的 SIM 层实验，
 对前 k 个 seed（默认 k=1）逐 seed 与 freeze/ 下对应 npz 的同 seed 段
 做数值断言，确认可独立复现论文结果。
 
@@ -15,6 +15,7 @@
     - fig2 的公式层（formula_*）是确定性计算、不依赖 seed，故不在本
       回归范围内；本测试只覆盖含 seed 维度的 SIM 层 *_runs 数据。
     - freeze 中 fig2/3/4 不含 RR 策略，因此本测试同样不跑 RR。
+    - fig5/6 覆盖 PSF/AA/QBA 三策略及 FCFS 参考，校验 per-class 指标。
 """
 
 from __future__ import annotations
@@ -32,7 +33,13 @@ for _p in (ROOT, SRC):
         sys.path.insert(0, _p)
 
 from llm_in_queuing.config import load_config
-from scripts.experiment import sweep_lambda, sweep_quotak, sweep_gamma
+from scripts.experiment import (
+    sweep_lambda,
+    sweep_quotak,
+    sweep_gamma,
+    sweep_epsilonSL,
+    sweep_epsilonLS,
+)
 from scripts.experiment._common import run_references
 
 FREEZE_DIR = os.path.join(ROOT, "freeze")
@@ -47,6 +54,11 @@ FIG4_REF_POLICIES = ["FCFS", "PSF"]
 FIG4_REF_NPZ = {"FCFS": "fcfs", "PSF": "psf"}
 
 STATS = ["mean", "p95", "p99"]
+
+# fig5/fig6 使用扩展的 per-class 指标；RR 不在此三策略论文 panel 中。
+FIG56_POLICIES = ["PSF", "AA", "QBA"]
+FIG56_NPZ = {"PSF": "psf", "AA": "psfa", "QBA": "psfaq"}
+FIG56_METRICS = ["mean", "p95", "p99", "ts_mean", "ts_p99", "tl_mean", "tl_p99"]
 
 
 def _assert_close(got, ref, label, tol):
@@ -213,6 +225,8 @@ def main() -> None:
     _check_fig2(args.tol, args.k)
     _check_fig3(args.tol, args.k)
     _check_fig4(args.tol, args.k)
+    _check_fig5(args.tol, args.k)
+    _check_fig6(args.tol, args.k)
     print("ALL REPRODUCTION CHECKS PASSED")
 
 
