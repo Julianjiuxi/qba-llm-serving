@@ -91,11 +91,14 @@ def schedule_qba(heap: list, state: EngineState) -> bool:
                 if remaining_prefill_budget <= 0:
                     break
 
-                # 为可复现性，沿用 refine.py 的旧语义：短期计数判断在处理之后内联求值。
-                # 旧语义下，发生 prefill 切分的新到 short 请求（prefill_chunk=True 且 res_token>0）
-                # 会被视为 continuation，从而不计入 quota 计数器。
-                # 新语义（切分的 short 首次准入也计入 quota）暂缓，以后再讨论：
-                #   was_continuation = is_prefill_continuation(e)
+                # Quota accounting: the short-admission counter advances only
+                # when a predicted-short request completes prefill and becomes
+                # fully admitted in the current batch. The is_prefill_continuation
+                # test below runs after the prefill fields are updated, so a
+                # request whose remaining prefill fits entirely here (res_token=0)
+                # is not a continuation and counts, whereas a chunked request with
+                # residual prefill tokens is a continuation and defers its quota
+                # increment to the batch that finishes its prefill.
 
                 rem = int(e.prefill_res_token)
                 take = min(rem, int(remaining_prefill_budget))

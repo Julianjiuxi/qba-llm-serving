@@ -42,21 +42,21 @@
     "epsilon_sl_max": 0.4,
     "epsilon_sl_step": 0.05,
     "epsilon_ls_fixed": 0.0,
-    "plot_dir": "D:\\桌面\\LLM_phrase2\\LLM_in_Queuing\\scripts\\experiment\\..\\plot",
+    "plot_dir": "D:\\桌面\\LLM_phrase2\\LLM_in_Queuing_public\\scripts\\experiment\\..\\plot",
     "out_prefix": "fig5",
     "sim_admission_number": null,
     "seed_start": 42,
     "seed_count": 100
   },
   "git": {
-    "git_commit": "48afb12b30ebfe26ddad1076e6c50be26ac8fb04",
-    "git_dirty": true
+    "git_commit": "39f2edba014f681d7d66963a8f9cd2ede0c86de3",
+    "git_dirty": false
   },
-  "generated_at_utc": "2026-08-07T20:06:29Z",
+  "generated_at_utc": "2026-08-16T03:26:14Z",
   "python_version": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
   "numpy_version": "1.26.4",
-  "npz_sha256": "96d3ad4281aaba4c2f59fc418b1be9bc27f46c3f4cdde05ab8bbc10538585ce4",
-  "config_path": "D:\\桌面\\LLM_phrase2\\LLM_in_Queuing\\scripts\\experiment\\configs\\sweep_epsilonSL_base.yaml",
+  "npz_sha256": "c3a6f2d1a04807e879bb4452f1d9b25d79d78c541f278f2096eb6d75c2858df1",
+  "config_path": "D:\\桌面\\LLM_phrase2\\LLM_in_Queuing_public\\scripts\\experiment\\configs\\sweep_epsilonSL_base.yaml",
   "epsilon_ls_fixed": 0.0,
   "sweep_policies": [
     "PSF",

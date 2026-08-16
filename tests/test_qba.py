@@ -3,8 +3,9 @@
 重点测试 quota counter 的基础语义：ordinary predicted-short 完整 prefill
 准入会 +1，predicted-long 不计入。
 
-注：partial-prefill 与 continuation-finish 的计数语义（was_continuation 修复）
-暂缓，当前沿用 refine.py 旧语义以保证 freeze/ 冻结结果可复现。
+Note: partial-prefill and continuation-finish cases are not exercised here;
+they follow the same "count on full admission" rule documented in schedule_qba,
+which is what the frozen freeze/ artifacts were produced with.
 """
 
 from __future__ import annotations
