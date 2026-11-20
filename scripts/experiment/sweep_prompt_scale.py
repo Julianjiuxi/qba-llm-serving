@@ -14,8 +14,11 @@
 - RR 为内部策略，本轮不运行、不绘图。
 
 实现方式: 不修改 workload.py / 引擎，仅在实验脚本内部临时替换
-``simulator.generate_heapq``，对原始生成器返回的请求堆做后处理，并用 ``finally``
-恢复原函数。注意这是模块级替换，同一进程内不要并行跑不同倍率。
+``simulator.generate_heapq``，对原始生成器返回的请求堆做后处理。替换/恢复的粒度是
+"每个 (seed, prompt_scale) 单元一次": 同一倍率下 FCFS/PSF/AA/QBA 四个策略共用同一个
+被包装的生成器，全部跑完后再用 ``finally`` 恢复原函数（内层 per-policy 的
+``try/except`` 只用于给异常补充上下文，不负责恢复）。注意这是模块级替换，同一进程内
+不要并行跑不同倍率。
 
 用法:
     python -m scripts.experiment.sweep_prompt_scale
@@ -266,7 +269,7 @@ def main():
     )
     print(f"saved data: {npz_path}")
     print(f"saved meta: {meta_path}")
-    print(f"next: python draw_fig8.py --data \"{npz_path}\"")
+    print(f"next: python -m scripts.draw.draw_fig8 --data \"{npz_path}\"")
 
 
 if __name__ == "__main__":

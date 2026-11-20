@@ -47,6 +47,20 @@ def _set_log2_ticks(ax, x_vals: np.ndarray) -> None:
     ax.minorticks_off()
 
 
+def _safe_relative(numer: np.ndarray, denom: np.ndarray) -> np.ndarray:
+    """逐元素相对比值；分母为 0 处标记为 NaN（不可定义），不引入 epsilon 改变结果。
+
+    低负载/小样本下 FCFS 某类 mean wait 可能为 0，直接相除会得到 inf/NaN 并污染 CI。
+    这里把分母为 0 的点显式置为 NaN（绘图时呈现断点），其余点保留真实比值。
+    """
+    numer = np.asarray(numer, dtype=np.float64)
+    denom = np.asarray(denom, dtype=np.float64)
+    out = np.full(numer.shape, np.nan, dtype=np.float64)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        np.divide(numer, denom, out=out, where=(denom != 0.0))
+    return out
+
+
 def _plot_panel(
     out_dir: str,
     prefix: str,
@@ -177,7 +191,7 @@ def main():
     fcfs_ts = sweep_data["FCFS"]["ts_mean"]  # (n_seeds, n_scales)
     sweep_sub = {}
     for p in sweep_data:
-        sweep_sub[p] = sweep_data[p]["ts_mean"] / fcfs_ts
+        sweep_sub[p] = _safe_relative(sweep_data[p]["ts_mean"], fcfs_ts)
     path = _plot_panel(
         out_dir, prefix, prompt_scales, sweep_sub,
         f"{prefix}_true_short_relative_wait_vs_a.pdf",
@@ -189,7 +203,7 @@ def main():
     fcfs_tl = sweep_data["FCFS"]["tl_mean"]  # (n_seeds, n_scales)
     sweep_sub = {}
     for p in sweep_data:
-        sweep_sub[p] = sweep_data[p]["tl_mean"] / fcfs_tl
+        sweep_sub[p] = _safe_relative(sweep_data[p]["tl_mean"], fcfs_tl)
     path = _plot_panel(
         out_dir, prefix, prompt_scales, sweep_sub,
         f"{prefix}_true_long_relative_wait_vs_a.pdf",
