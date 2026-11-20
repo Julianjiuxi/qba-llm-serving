@@ -1,0 +1,49 @@
+# fig8: prompt_scale（prompt 长度倍率）扫参基础配置
+# 从 sweep_threshold_base.yaml 复制，引擎与 workload 参数保持一致；
+# 本轮唯一主动扫描的变量是 prompt_scale（在实验脚本内对生成请求做确定性后处理）。
+
+admission_number: 5000
+lambda_arrival: 32.0
+
+norm_ratio: 0.7
+norm_loc: 100
+norm_scale: 30
+pareto_shape: 1.4
+pareto_scale: 40
+
+beta0: 3
+beta1: 0.75
+sigma: 0.3
+
+answer_len_cap: 4096
+prompt_len_cap: 4096
+
+TN: 0.0
+TP: 0.0
+FN: 0.0
+FP: 0.0
+label_threshold_percentail: 0.85
+
+BT_BASE_C: 0.003
+BT_SLOPE_A: 0.00002
+BT_KNEE_B0: 64
+BT_CONC_GAMMA: 0.0
+BT_JITTER_STD: 0.0
+BT_MIN: 0.0001
+
+KV_total_capacity: 8192
+KV_safety_threshold: 0.7
+
+budget_tokens: 128
+request_block_size: 8
+
+seed: 42
+
+schedule_method: QBA
+gamma: 0.80
+quota_k: 5
+ageing_measure: history
+
+steady_state:
+  enabled: false
+  trim_ratio: 0.1
