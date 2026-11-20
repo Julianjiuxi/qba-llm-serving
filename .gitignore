@@ -20,3 +20,6 @@ build/
 *.csv
 *.json
 !freeze/*.json
+
+# 云端全量实验运行产物（fig7 p 扫参等：日志/脚本快照/图），仅本地留档不入库
+scripts/plot/cloud_*/
