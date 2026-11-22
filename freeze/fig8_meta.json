@@ -1,0 +1,93 @@
+{
+  "cfg_sim_snapshot": {
+    "admission_number": 5000,
+    "seed": 42,
+    "budget_tokens": 128,
+    "request_block_size": 8,
+    "KV_total_capacity": 8192,
+    "KV_safety_threshold": 0.7,
+    "gamma": 0.8,
+    "quota_k": 5,
+    "ageing_measure": "history",
+    "label_threshold_percentail": 0.85,
+    "TN": 0.0,
+    "TP": 0.0,
+    "FN": 0.0,
+    "FP": 0.0,
+    "norm_ratio": 0.7,
+    "norm_loc": 100,
+    "norm_scale": 30,
+    "pareto_shape": 1.4,
+    "pareto_scale": 40,
+    "beta0": 3,
+    "beta1": 0.75,
+    "sigma": 0.3,
+    "prompt_len_cap": 4096,
+    "answer_len_cap": 4096,
+    "BT_BASE_C": 0.003,
+    "BT_SLOPE_A": 2e-05,
+    "BT_KNEE_B0": 64,
+    "BT_CONC_GAMMA": 0.0,
+    "BT_JITTER_STD": 0.0,
+    "BT_MIN": 0.0001,
+    "steady_state": {
+      "enabled": false,
+      "trim_ratio": 0.1
+    }
+  },
+  "batch_time_source": "engine_constants",
+  "args": {
+    "prompt_scales": "0.25,0.5,1,2,4",
+    "reference_load": 32.0,
+    "gamma": 0.8,
+    "quota_k": 5,
+    "plot_dir": "/root/autodl-fs/qba-runs/fig8-full-20261120",
+    "out_prefix": "fig8",
+    "sim_admission_number": null,
+    "seed_start": 42,
+    "seed_count": 100
+  },
+  "git": {
+    "git_commit": "1a0fb14bac1b36261bd90264b5b742173e9ddb82",
+    "git_dirty": true
+  },
+  "generated_at_utc": "2026-11-20T15:04:34Z",
+  "python_version": "3.12.3 | packaged by Anaconda, Inc. | (main, May  6 2024, 19:46:43) [GCC 11.2.0]",
+  "numpy_version": "1.26.4",
+  "npz_sha256": "d47b453c91d5a27390657c691420a076a281587f578ce6befbd80e98cb9a99b1",
+  "config_path": "/autodl-fs/data/qba-llm-serving/scripts/experiment/configs/sweep_prompt_scale_base.yaml",
+  "experiment": "prompt_scale",
+  "sweep_policies": [
+    "FCFS",
+    "PSF",
+    "AA",
+    "QBA"
+  ],
+  "ref_policies": [],
+  "prompt_scales": [
+    0.25,
+    0.5,
+    1.0,
+    2.0,
+    4.0
+  ],
+  "scaling_stage": "after_base_workload_generation_and_label_assignment",
+  "scaling_rule": "round_then_clip",
+  "scaling_formula": "P^(a) = min(prompt_len_cap, max(5, round(a * P)))",
+  "answer_preserved": true,
+  "labels_preserved": true,
+  "sharded_run": {
+    "seed_count": 100,
+    "requests": 5000,
+    "seed_start": 42,
+    "prompt_scales": [
+      0.25,
+      0.5,
+      1.0,
+      2.0,
+      4.0
+    ],
+    "commit": "1a0fb14bac1b36261bd90264b5b742173e9ddb82",
+    "source_sha256": "b237711ffc96381722cc2a4c23e7e0d2aaff4ebddd2a738aeb9179143318c256"
+  }
+}

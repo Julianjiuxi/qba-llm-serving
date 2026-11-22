@@ -25,5 +25,5 @@ jobs:
       - name: Run tests
         run: pytest tests/ -q
 
-      - name: Reproduction check (k=1)
+      - name: Reproduction check (fig2-10, k=1)
         run: python reproduction.py --k 1

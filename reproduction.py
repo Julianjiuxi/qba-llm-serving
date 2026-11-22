@@ -1,7 +1,7 @@
 """面向论文可复现性的回归测试。
 
-用重构后的 LLM_in_Queuing 引擎重跑 fig2/fig3/fig4/fig5/fig6 的 SIM 层实验，
-对前 k 个 seed（默认 k=1）逐 seed 与 freeze/ 下对应 npz 的同 seed 段
+用重构后的 LLM_in_Queuing 引擎重跑 fig2/fig3/fig4/fig5/fig6/fig7/fig8/fig9/fig10
+的 SIM 层实验，对前 k 个 seed（默认 k=1）逐 seed 与 freeze/ 下对应 npz 的同 seed 段
 做数值断言，确认可独立复现论文结果。
 
 用法:
@@ -16,6 +16,9 @@
       回归范围内；本测试只覆盖含 seed 维度的 SIM 层 *_runs 数据。
     - freeze 中 fig2/3/4 不含 RR 策略，因此本测试同样不跑 RR。
     - fig5/6 覆盖 PSF/AA/QBA 三策略及 FCFS 参考，校验 per-class 指标。
+    - fig7/8/9/10 为期刊扩展实验（freeze 数据在云端生成、本机逐位复现）：
+      fig7 阈值 p 扫参、fig8 prompt 缩放、fig9 p–k 交互、fig10 构成归一化扫描。
+      其中 fig7/fig9 额外校验 π_S；fig8/fig10 额外校验与策略无关的 workload 诊断。
 """
 
 from __future__ import annotations
@@ -39,6 +42,10 @@ from scripts.experiment import (
     sweep_gamma,
     sweep_epsilonSL,
     sweep_epsilonLS,
+    sweep_threshold,
+    sweep_prompt_scale,
+    sweep_pk,
+    sweep_composition,
 )
 from scripts.experiment._common import run_references
 
@@ -59,6 +66,27 @@ STATS = ["mean", "p95", "p99"]
 FIG56_POLICIES = ["PSF", "AA", "QBA"]
 FIG56_NPZ = {"PSF": "psf", "AA": "psfa", "QBA": "psfaq"}
 FIG56_METRICS = ["mean", "p95", "p99", "ts_mean", "ts_p99", "tl_mean", "tl_p99"]
+
+# fig7/fig8/fig10：FCFS 的整体指标也随扫参变量（p / prompt 倍率 / 构成倍率）变化，
+# 故四策略一并扫参；npz 前缀与引擎策略名的映射与实验脚本一致。
+FIG78_POLICIES = ["FCFS", "PSF", "AA", "QBA"]
+FIG78_NPZ = {"FCFS": "fcfs", "PSF": "psf", "AA": "psfa", "QBA": "psfaq"}
+FIG78_METRICS = ["mean", "p95", "p99", "ts_mean", "ts_p99", "tl_mean", "tl_p99"]
+FIG78_ERRORS = ["actual_epsilon_SL", "actual_epsilon_LS"]
+
+# fig8：与策略无关的 workload 诊断
+FIG8_DIAG = ["prompt_mean", "answer_mean", "token_ratio",
+             "prompt_lower_clip_fraction", "prompt_upper_clip_fraction"]
+
+# fig9：只扫 QBA，out 键与 npz 前缀固定为 psfaq
+FIG9_KEYS = FIG78_METRICS + FIG78_ERRORS + ["promoted_total", "promotion_fraction"]
+
+# fig10：引擎资源诊断（per-policy）与 workload 诊断（与策略无关）
+FIG10_POLICY_DIAG = ["oom_prob", "throughput", "batch_util", "promoted_total"]
+FIG10_WORK_DIAG = ["prompt_mean", "answer_mean", "total_mean", "token_ratio",
+                   "base_total_mean", "norm_scale", "total_rel_error",
+                   "prompt_upper_clip_fraction", "answer_upper_clip_fraction",
+                   "label_flip_fraction", "pi_s"]
 
 
 def _assert_close(got, ref, label, tol):
@@ -212,8 +240,95 @@ def _check_fig6(tol: float, k: int) -> None:
     print("[fig6] OK")
 
 
+def _check_fig7(tol: float, k: int) -> None:
+    data = np.load(os.path.join(FREEZE_DIR, "fig7_data.npz"))
+    cfg = _close_warmup(load_config(os.path.join(CONFIG_DIR, "sweep_threshold_base.yaml")))
+    lam = float(data["reference_lambda"][0])
+    percentiles = data["percentiles"]
+    seeds = [int(x) for x in data["seeds"][:k]]
+    print(f"[fig7] seeds={seeds} percentiles={percentiles.tolist()} lambda={lam}")
+    rows, pi_s_runs = sweep_threshold._run_threshold_sweep(
+        cfg, lam, percentiles, FIG78_POLICIES, seeds)
+    for p in FIG78_POLICIES:
+        nkey = FIG78_NPZ[p]
+        for mk in FIG78_METRICS + FIG78_ERRORS:
+            _assert_close(
+                rows[p][f"{mk}_runs"], data[f"{nkey}_{mk}_runs"][:k],
+                f"fig7 {p} {mk}", tol)
+    _assert_close(pi_s_runs, data["pi_s_runs"][:k], "fig7 pi_s", tol)
+    # RR 为内部参考策略（不绘图），仅冻存其数据
+    refs = run_references(cfg, lam, ["RR"], seeds, extended=True)
+    for mk in FIG78_METRICS + FIG78_ERRORS:
+        _assert_close(
+            refs["RR"][f"{mk}_runs"], data[f"ref_rr_{mk}_runs"][:k],
+            f"fig7 ref RR {mk}", tol)
+    print("[fig7] OK")
+
+
+def _check_fig8(tol: float, k: int) -> None:
+    data = np.load(os.path.join(FREEZE_DIR, "fig8_data.npz"))
+    cfg = _close_warmup(load_config(os.path.join(CONFIG_DIR, "sweep_prompt_scale_base.yaml")))
+    lam = float(data["reference_lambda"][0])
+    scales = data["prompt_scales"]
+    seeds = [int(x) for x in data["seeds"][:k]]
+    print(f"[fig8] seeds={seeds} prompt_scales={scales.tolist()} lambda={lam}")
+    rows, diag = sweep_prompt_scale._run_prompt_scale_sweep(
+        cfg, lam, scales, FIG78_POLICIES, seeds)
+    for p in FIG78_POLICIES:
+        nkey = FIG78_NPZ[p]
+        for mk in FIG78_METRICS + FIG78_ERRORS:
+            _assert_close(
+                rows[p][f"{mk}_runs"], data[f"{nkey}_{mk}_runs"][:k],
+                f"fig8 {p} {mk}", tol)
+    for dk in FIG8_DIAG:
+        _assert_close(diag[dk], data[f"{dk}_runs"][:k], f"fig8 diag {dk}", tol)
+    print("[fig8] OK")
+
+
+def _check_fig9(tol: float, k: int) -> None:
+    data = np.load(os.path.join(FREEZE_DIR, "fig9_data.npz"))
+    cfg = _close_warmup(load_config(os.path.join(CONFIG_DIR, "sweep_pk_base.yaml")))
+    lam = float(data["reference_lambda"][0])
+    quota_ks = data["quota_ks"]
+    percentiles = data["percentiles"]
+    seeds = [int(x) for x in data["seeds"][:k]]
+    print(f"[fig9] seeds={seeds} quota_ks={quota_ks.tolist()} "
+          f"percentiles={percentiles.tolist()} lambda={lam}")
+    out, pi_s_runs = sweep_pk._run_pk_sweep(cfg, lam, quota_ks, percentiles, seeds)
+    for mk in FIG9_KEYS:
+        _assert_close(
+            out[mk], data[f"psfaq_{mk}_runs"][:k], f"fig9 {mk}", tol)
+    _assert_close(pi_s_runs, data["pi_s_runs"][:k], "fig9 pi_s", tol)
+    print("[fig9] OK")
+
+
+def _check_fig10(tol: float, k: int) -> None:
+    data = np.load(os.path.join(FREEZE_DIR, "fig10_data.npz"))
+    cfg = _close_warmup(load_config(os.path.join(CONFIG_DIR, "sweep_composition_base.yaml")))
+    lam = float(data["reference_lambda"][0])
+    scales = data["composition_scales"]
+    seeds = [int(x) for x in data["seeds"][:k]]
+    print(f"[fig10] seeds={seeds} composition_scales={scales.tolist()} lambda={lam}")
+    out, policy_diag, work_diag = sweep_composition._run_composition_sweep(
+        cfg, lam, scales, FIG78_POLICIES, seeds)
+    for p in FIG78_POLICIES:
+        nkey = FIG78_NPZ[p]
+        # 注意：composition 脚本的 out/policy_diag 键不带 "_runs" 后缀（npz 里才带）
+        for mk in FIG78_METRICS + FIG78_ERRORS:
+            _assert_close(
+                out[p][mk], data[f"{nkey}_{mk}_runs"][:k],
+                f"fig10 {p} {mk}", tol)
+        for dk in FIG10_POLICY_DIAG:
+            _assert_close(
+                policy_diag[p][dk], data[f"{nkey}_{dk}_runs"][:k],
+                f"fig10 {p} {dk}", tol)
+    for dk in FIG10_WORK_DIAG:
+        _assert_close(work_diag[dk], data[f"{dk}_runs"][:k], f"fig10 diag {dk}", tol)
+    print("[fig10] OK")
+
+
 def main() -> None:
-    parser = argparse.ArgumentParser(description="论文 fig2/3/4/5/6 可复现性回归测试")
+    parser = argparse.ArgumentParser(description="论文 fig2/3/4/5/6/7/8/9/10 可复现性回归测试")
     parser.add_argument("--k", type=int, default=1, help="抽取并校验的 seed 数量")
     parser.add_argument("--tol", type=float, default=1e-8, help="数值比较容差（rtol=atol）")
     args = parser.parse_args()
@@ -227,6 +342,10 @@ def main() -> None:
     _check_fig4(args.tol, args.k)
     _check_fig5(args.tol, args.k)
     _check_fig6(args.tol, args.k)
+    _check_fig7(args.tol, args.k)
+    _check_fig8(args.tol, args.k)
+    _check_fig9(args.tol, args.k)
+    _check_fig10(args.tol, args.k)
     print("ALL REPRODUCTION CHECKS PASSED")
 
 
