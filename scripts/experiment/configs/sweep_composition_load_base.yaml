@@ -1,0 +1,54 @@
+# fig13: 跨负载的构成扫描（fig11 的小型迁移验证）基础配置
+# 从 sweep_request_composition_base.yaml（fig11）复制，引擎与 workload 参数完全一致。
+# 复用 fig11 的逐请求总 token 守恒生成方式，额外扫描到达率 λ：
+#   - 构成倍率 a ∈ {0.5, 1, 2, 4}（覆盖到 a=4 以观察 fig11 在 a=2→4 的回落段）
+#   - 到达率 λ ∈ {26, 32, 38}
+#   - 标签阈值 p 固定 0.85（不扫描）
+#   - oracle 标签（TN/TP/FN/FP 全为 0）
+# 目的：检查 fig11 的单 seed 非单调趋势与 promotion 差异在其它负载下是否仍存在。
+
+admission_number: 5000
+lambda_arrival: 32.0
+
+norm_ratio: 0.7
+norm_loc: 100
+norm_scale: 30
+pareto_shape: 1.4
+pareto_scale: 40
+
+beta0: 3
+beta1: 0.75
+sigma: 0.3
+
+answer_len_cap: 4096
+prompt_len_cap: 4096
+
+TN: 0.0
+TP: 0.0
+FN: 0.0
+FP: 0.0
+label_threshold_percentail: 0.85
+
+BT_BASE_C: 0.003
+BT_SLOPE_A: 0.00002
+BT_KNEE_B0: 64
+BT_CONC_GAMMA: 0.0
+BT_JITTER_STD: 0.0
+BT_MIN: 0.0001
+
+KV_total_capacity: 8192
+KV_safety_threshold: 0.7
+
+budget_tokens: 128
+request_block_size: 8
+
+seed: 42
+
+schedule_method: QBA
+gamma: 0.80
+quota_k: 5
+ageing_measure: history
+
+steady_state:
+  enabled: false
+  trim_ratio: 0.1
