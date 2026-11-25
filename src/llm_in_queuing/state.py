@@ -14,8 +14,9 @@ def init_simulator_state(cfg: dict) -> EngineState:
     gamma = float(cfg.get("gamma", 0.95))
     ageing_measure = str(cfg.get("ageing_measure", "waiting_queue"))
     quota_k = int(cfg.get("quota_k", 5))
+    mech_diag_enabled = bool(cfg.get("mech_diag_enabled", False))
 
-    return EngineState(
+    state = EngineState(
         KV_total_capacity=KV_total_capacity,
         KV_safety_threshold=KV_safety_threshold,
         budget_tokens=budget_tokens,
@@ -25,6 +26,8 @@ def init_simulator_state(cfg: dict) -> EngineState:
         quota_k=max(1, quota_k),
         schedule_method=str(cfg.get("schedule_method", "FCFS")),
     )
+    state.mech.enabled = mech_diag_enabled
+    return state
 
 
 def is_prefill_continuation(req: Request) -> bool:

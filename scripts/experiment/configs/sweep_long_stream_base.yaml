@@ -1,0 +1,58 @@
+# fig14: 长请求流下的负载—构成实验（Tier1）基础配置
+# 从 sweep_composition_load_base.yaml（fig13）复制，引擎与 workload 参数完全一致。
+# 复用 fig11 的逐请求总 token 守恒生成方式，额外扫描：
+#   - 构成倍率 a ∈ {0.5, 1, 2, 4}
+#   - 到达率 λ ∈ {26, 30, 32, 34, 36, 38, 40}
+#   - 请求流长度 N ∈ {5000, 20000, 100000}（同一 seed 各 N 互为前缀，共享分类阈值）
+# 目的：检查 fig11/fig13 的构成效应与自保护提升比例是否依赖 N=5000 的运行长度，
+#       并用窗口/积压双口径区分「稳定运行」与「过载积压」。
+# 同时开启旁路机制统计（mech_diag_enabled），为机制分解面板提供数据。
+
+admission_number: 100000
+lambda_arrival: 32.0
+
+norm_ratio: 0.7
+norm_loc: 100
+norm_scale: 30
+pareto_shape: 1.4
+pareto_scale: 40
+
+beta0: 3
+beta1: 0.75
+sigma: 0.3
+
+answer_len_cap: 4096
+prompt_len_cap: 4096
+
+TN: 0.0
+TP: 0.0
+FN: 0.0
+FP: 0.0
+label_threshold_percentail: 0.85
+
+BT_BASE_C: 0.003
+BT_SLOPE_A: 0.00002
+BT_KNEE_B0: 64
+BT_CONC_GAMMA: 0.0
+BT_JITTER_STD: 0.0
+BT_MIN: 0.0001
+
+KV_total_capacity: 8192
+KV_safety_threshold: 0.7
+
+budget_tokens: 128
+request_block_size: 8
+
+seed: 42
+
+schedule_method: QBA
+gamma: 0.80
+quota_k: 5
+ageing_measure: history
+
+# Tier2 旁路机制统计（只读，不影响调度；开关切换零行为改变）
+mech_diag_enabled: true
+
+steady_state:
+  enabled: false
+  trim_ratio: 0.1

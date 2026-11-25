@@ -130,3 +130,71 @@ def metrics_calculate(state: EngineState) -> dict:
         'actual_epsilon_SL': actual_epsilon_SL,
         'actual_epsilon_LS': actual_epsilon_LS,
     }
+
+
+def mechanism_metrics(state: EngineState) -> dict:
+    """聚合 Tier2 旁路机制统计（``state.mech``）。
+
+    仅当 ``cfg["mech_diag_enabled"]`` 为真（``state.mech.enabled``）时返回统计；
+    否则返回空 dict。本函数只读聚合，不修改 state，不参与任何调度决策。
+
+    指标口径（分母明确区分）:
+        η_eligibility = 有候选的债务批 / **KV 门开启期间调度的**债务批
+            = (candidate_blocked + success) / (no_eligible + candidate_blocked + success)
+        η_feasibility = 成功提升的债务批 / 有候选的债务批
+            = success / (candidate_blocked + success)
+        上述三个分桶仅在 KV 安全门**开启**且本批真正调度出 batch 时计数，互斥；
+        ``debt_batch_kv_gate_closed`` 属于门关闭分支，**不计入**上述分母。因此 η 是
+        「门开启条件下」的候选率与成功率；门关闭占比需与三分桶合并后才能得到完整债务批分解。
+    """
+    mech = getattr(state, "mech", None)
+    if mech is None or not mech.enabled:
+        return {}
+
+    durs = (np.asarray(list(mech.debt_episode_durations), dtype=np.float64)
+            if mech.debt_episode_durations else np.array([], dtype=np.float64))
+    dur_mean = float(durs.mean()) if durs.size else 0.0
+    dur_p99 = float(np.percentile(durs, 99)) if durs.size else 0.0
+    dur_max = float(durs.max()) if durs.size else 0.0
+
+    unresolved = int(mech.debt_active)
+    unresolved_dur = (float(state.current_time) - float(mech.debt_start_time)) if mech.debt_active else 0.0
+
+    total_debt_batches = (int(mech.debt_batch_no_eligible)
+                          + int(mech.debt_batch_candidate_blocked)
+                          + int(mech.debt_batch_success))
+    eligible_batches = int(mech.debt_batch_candidate_blocked) + int(mech.debt_batch_success)
+    eta_eligibility = (float(eligible_batches) / float(total_debt_batches)
+                       if total_debt_batches > 0 else 0.0)
+    eta_feasibility = (float(mech.debt_batch_success) / float(eligible_batches)
+                       if eligible_batches > 0 else 0.0)
+
+    return {
+        "mech_debt_episode_count": float(mech.debt_episode_count),
+        "mech_debt_episode_mean_duration": dur_mean,
+        "mech_debt_episode_p99_duration": dur_p99,
+        "mech_debt_episode_max_duration": dur_max,
+        "mech_debt_unresolved_at_end": float(unresolved),
+        "mech_debt_unresolved_duration": float(unresolved_dur),
+        "mech_promotion_success_count": float(mech.promotion_success_count),
+        "mech_debt_batch_no_eligible": float(mech.debt_batch_no_eligible),
+        "mech_debt_batch_candidate_blocked": float(mech.debt_batch_candidate_blocked),
+        "mech_debt_batch_success": float(mech.debt_batch_success),
+        "mech_debt_batch_kv_gate_closed": float(mech.debt_batch_kv_gate_closed),
+        "mech_debt_batch_time_no_eligible": float(mech.debt_batch_time_no_eligible),
+        "mech_debt_batch_time_candidate_blocked": float(mech.debt_batch_time_candidate_blocked),
+        "mech_debt_batch_time_success": float(mech.debt_batch_time_success),
+        "mech_eta_eligibility": eta_eligibility,
+        "mech_eta_feasibility": eta_feasibility,
+        "mech_long_admit_normal": float(mech.long_admit_normal),
+        "mech_long_admit_promoted": float(mech.long_admit_promoted),
+        "mech_long_admit_eligible_at_entry": float(mech.long_admit_eligible_at_entry),
+        "mech_budget_break_count": float(mech.budget_break_count),
+        "mech_kv_break_count": float(mech.kv_break_count),
+        "mech_concurrency_break_count": float(mech.concurrency_break_count),
+        "mech_continuation_break_count": float(mech.continuation_break_count),
+        "mech_prefill_token_sum": float(mech.prefill_token_sum),
+        "mech_decode_token_sum": float(mech.decode_token_sum),
+        "mech_continuation_count": float(mech.continuation_count),
+        "mech_batch_count": float(mech.batch_count),
+    }

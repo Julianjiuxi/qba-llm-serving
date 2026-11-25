@@ -98,7 +98,26 @@ def handle_batch_event(ev: BatchEvent, state: EngineState) -> None:
         "psfaq_promoted_this_batch": state.psfaq_promoted_this_batch,
         "psfaq_promotion_debt_end": state.psfaq_promotion_debt,
         "psfaq_short_counter_end": state.psfaq_short_admit_since_last_promoted,
+        # fig14 长流窗口统计所需（惰性、无副作用）
+        "wait_queue_len": len(state.wait_queue),
+        "finished_count": len(state.finished_queue),
     }
+    if state.mech.enabled:
+        snap.update({
+            "mech_debt_owed": bool(ev.mech_debt_owed),
+            "mech_promoted_candidate": bool(ev.mech_promoted_candidate),
+            "mech_promoted_admitted": bool(ev.mech_promoted_admitted),
+            "mech_aged_long_count": int(ev.mech_aged_long_count),
+            "mech_budget_break": bool(ev.mech_budget_break),
+            "mech_kv_break": bool(ev.mech_kv_break),
+            "mech_concurrency_break": bool(ev.mech_concurrency_break),
+            "mech_continuation_break": bool(ev.mech_continuation_break),
+            "mech_prefill_tokens": int(ev.mech_prefill_tokens),
+            "mech_decode_tokens": int(ev.mech_decode_tokens),
+            "mech_active_decode": int(ev.mech_active_decode),
+            "mech_residual_prefill_budget": int(ev.mech_residual_prefill_budget),
+            "mech_continuation_steps": int(ev.mech_continuation_steps),
+        })
     state.batch_list.append(snap)
 
     state.engine_isbusy = False
