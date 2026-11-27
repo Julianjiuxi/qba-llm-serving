@@ -1,0 +1,70 @@
+# fig15: 固定安全比例下的 KV 容量敏感性与调度折中实验 — 基础配置
+# 从 sweep_long_stream_base.yaml（fig14）复制：引擎 / workload / 标签口径完全一致，
+# 只把 KV_total_capacity 提升为**扫参维度**（KV_safety_threshold 为安全比例，固定）。
+#
+# 实验问题:
+#   在固定 quota 数量条件（χ_pred = N_Ŝ / (k·N_L̂)）与固定安全比例 r 下，放宽 KV 约束
+#   （增大 K，同时 K_safe = r·K 同增）后，QBA 的「平均等待—长尾折中」如何变化？
+#
+# 网格（由 main() 传入，本文件只给默认引擎参数）:
+#   - 短流容量扫描: N=5000，100 seeds，K ∈ {8192,12288,16384,32768}
+#   - 长流端点验证: N=100000，32 seeds，K ∈ {8192,32768}
+#   - 构成倍率 a ∈ {0.5,1,2,4}（短）/ {1,2}（长）；到达率 λ ∈ {30,32,34,38}
+#   - 参考流参考长度 N_ref = 100000（短流与长流共用同一分类阈值）
+#
+# 说明:
+#   - KV_safety_threshold 是**相对安全比例 r=0.7**：绝对安全门 = r·K，随 K 同增。
+#   - 硬容量越界在当前模拟器中只被记录（current_OOM），不触发真实 OOM 恢复，
+#     故不能把性能变化解释为「消除了 OOM 失败」。
+#   - 开启旁路机制统计（mech_diag_enabled），本轮不再另跑 mech_k 网格。
+
+admission_number: 100000
+lambda_arrival: 32.0
+
+norm_ratio: 0.7
+norm_loc: 100
+norm_scale: 30
+pareto_shape: 1.4
+pareto_scale: 40
+
+beta0: 3
+beta1: 0.75
+sigma: 0.3
+
+answer_len_cap: 4096
+prompt_len_cap: 4096
+
+TN: 0.0
+TP: 0.0
+FN: 0.0
+FP: 0.0
+label_threshold_percentail: 0.85
+
+BT_BASE_C: 0.003
+BT_SLOPE_A: 0.00002
+BT_KNEE_B0: 64
+BT_CONC_GAMMA: 0.0
+BT_JITTER_STD: 0.0
+BT_MIN: 0.0001
+
+# KV 容量为扫参维度；此处给出默认值（被 main() 的容量网格覆盖）。
+# KV_safety_threshold 为固定安全比例 r（绝对安全门 = r·K）。
+KV_total_capacity: 8192
+KV_safety_threshold: 0.7
+
+budget_tokens: 128
+request_block_size: 8
+
+seed: 42
+
+schedule_method: QBA
+gamma: 0.80
+quota_k: 5
+ageing_measure: history
+
+# Tier2 旁路机制统计（只读，不影响调度；开关切换零行为改变）
+mech_diag_enabled: true
+
+steady_state:
+  enabled: false
+  trim_ratio: 0.1
