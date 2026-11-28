@@ -1,0 +1,62 @@
+# scaled real-trace replay（模块 A–E）— 基础配置
+#
+# 定位: 论文中的 "scaled real-trace replay"。真实到达形状与长度关系（Azure 2024
+#   生产 trace）经**统一缩放**后在当前模拟器中回放，验证 Fig11–15 的核心机制
+#   （数量条件—资源与候选状态—等待分配）能否迁移到真实输入分布。
+#   它验证输入分布的迁移性，**不能**替代真实 GPU 上的系统验证。
+#
+# 引擎 / workload / 标签口径与 fig14/fig15 完全一致（同一源码版本），
+# 只把请求流来源从合成泊松换成真实 trace 窗口。
+#
+# 关键事实（见 analysis/realtrace_design_20261128/*.json）:
+#   - Azure 100 短窗口处理后平均 prompt≈727.96、answer≈46.51、总≈774.48，
+#     R_tok=E[P]/E[D]≈15.65，prompt 占总 token≈94%（阶段构成极度不平衡）；
+#   - token_scale 统一 0.44，逐请求整数化 max(min_cap, int(raw*0.44))；
+#   - 保留真实同时到达事件（不重新生成泊松、不打散零间隔）。
+
+# ── 真实 trace 位置 ──
+trace_dir: data                                   # 相对仓库根（LLM_in_Queuing_public）
+subset_glob: Azure_work_load_subset[0-9][0-9][0-9].csv
+week_csv: AzureLLMInferenceTrace_conv_1week.csv
+
+# ── 长度处理（与旧 loader 完全一致：先乘缩放再整数化截断，再夹上下限）──
+token_scale: 0.44
+prompt_len_cap: 4096
+answer_len_cap: 4096
+
+# ── 标签 / 调度 ──
+label_threshold_percentail: 0.85
+TN: 0.0
+TP: 0.0
+FN: 0.0
+FP: 0.0
+
+# ── KV / 预算 ──
+KV_total_capacity: 8192
+KV_safety_threshold: 0.7          # 固定安全比例 r（绝对安全门 = r*K）
+budget_tokens: 128
+request_block_size: 8
+
+# ── 调度器默认（被 main() 覆盖）──
+lambda_arrival: 32.0
+schedule_method: QBA
+gamma: 0.80
+quota_k: 5
+ageing_measure: history
+
+# ── 引擎 batch-time 常量（与 fig15 一致）──
+BT_BASE_C: 0.003
+BT_SLOPE_A: 0.00002
+BT_KNEE_B0: 64
+BT_CONC_GAMMA: 0.0
+BT_JITTER_STD: 0.0
+BT_MIN: 0.0001
+
+seed: 42
+
+# ── 旁路机制统计（只读，零行为改变）──
+mech_diag_enabled: true
+
+steady_state:
+  enabled: false
+  trim_ratio: 0.1

@@ -70,6 +70,7 @@ def mark_request_started(ev: Request, state: EngineState) -> None:
     a = float(ev.arrival_time)
     w = float(ev.waiting_time)
 
+    ev.started = True
     state.arrived_not_started_n -= 1
     state.arrived_not_started_sum_arrival -= a
     state.arrived_not_started_sum_arrival_sq -= a * a

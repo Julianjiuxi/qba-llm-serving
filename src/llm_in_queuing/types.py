@@ -18,6 +18,9 @@ class Request:
     true_label: str = ""
     predict_label: str = ""
     in_processing: bool = False
+    # 独立的「是否已开始服务」状态：不依赖 start_service_time == 0.0 哨兵，
+    # 避免 t=0 开始服务的请求被误判为未开始（chunked prefill 会重复标记）。
+    started: bool = False
     # QBA：是否经由 promotion（保护）通道准入。仅作旁路标记，不参与调度决策。
     promoted: bool = False
 

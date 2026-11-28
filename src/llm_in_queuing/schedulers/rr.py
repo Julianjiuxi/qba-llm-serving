@@ -140,7 +140,7 @@ def schedule_rr(heap: list, state: EngineState) -> bool:
                     prefill_token_map[int(e.id)] = int(rem)
                     planned_kv_increase += int(rem) + int(extra_decode0)
                     processing_in_current_itr.append(e)
-                    if e.start_service_time == 0.0:
+                    if not e.started:
                         e.start_service_time = state.current_time
                         e.waiting_time = e.start_service_time - e.arrival_time
                         mark_request_started(e, state)
@@ -155,7 +155,7 @@ def schedule_rr(heap: list, state: EngineState) -> bool:
                     prefill_token_map[int(e.id)] = int(take)
                     planned_kv_increase += int(take)
                     processing_in_current_itr.append(e)
-                    if e.start_service_time == 0.0:
+                    if not e.started:
                         e.start_service_time = state.current_time
                         e.waiting_time = e.start_service_time - e.arrival_time
                         mark_request_started(e, state)
